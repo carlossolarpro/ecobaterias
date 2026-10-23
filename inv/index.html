@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="es-CL">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ecobaterías · Inversión</title>
+<meta name="description" content="Simulación interactiva de dilución y valorización de la participación de los socios de Ecobaterías.">
+<meta name="robots" content="noindex">
+<style>
+  :root {
+    --bg: #f6f7f5; --card: #ffffff; --ink: #1b1f1d; --muted: #5d6662; --line: #e2e6e3;
+    --fund: #2f6f4f; --sergio: #e08a1e; --revtech: #3f6fb5; --inv3: #8a5cc2;
+    --accent: #2f6f4f; --up: #1f8a4c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #121513; --card: #1b1f1d; --ink: #eef1ef; --muted: #9aa49f; --line: #2c322f;
+      --fund: #4fa077; --sergio: #f0a243; --revtech: #6b95d6; --inv3: #a983dc;
+      --accent: #4fa077; --up: #45c07a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 32px 16px 64px; }
+  header h1 { margin: 0 0 4px; font-size: clamp(1.6rem, 4vw, 2.2rem); letter-spacing: -.01em; }
+  header p { margin: 0; color: var(--muted); }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 28px 0 20px; }
+  .step { border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 12px;
+    padding: 12px 14px; text-align: left; cursor: pointer; font: inherit; transition: border-color .2s, box-shadow .2s; }
+  .step small { display: block; color: var(--muted); font-size: .8rem; }
+  .step b { display: block; font-size: .98rem; }
+  .step[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent); }
+  .nav { display: flex; gap: 8px; justify-content: flex-end; margin-bottom: 16px; }
+  .nav button { font: inherit; border: 1px solid var(--line); background: var(--card); color: var(--ink);
+    border-radius: 999px; padding: 6px 16px; cursor: pointer; }
+  .nav button:disabled { opacity: .4; cursor: default; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px; }
+  .narr { margin-bottom: 16px; }
+  .narr h2 { margin: 0 0 6px; font-size: 1.2rem; }
+  .narr p { margin: 0; color: var(--muted); }
+  .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+  .kpi { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+  .kpi span { display: block; color: var(--muted); font-size: .82rem; }
+  .kpi strong { display: block; font-size: 1.45rem; font-variant-numeric: tabular-nums; }
+  .kpi em { font-style: normal; font-size: .82rem; color: var(--up); }
+  .grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: 16px; }
+  .card h3 { margin: 0 0 12px; font-size: 1rem; }
+  .donut-wrap { display: flex; justify-content: center; }
+  svg text { fill: var(--ink); }
+  .legend { list-style: none; padding: 0; margin: 14px 0 0; display: grid; gap: 6px; }
+  .legend li { display: flex; align-items: center; gap: 8px; font-size: .92rem; font-variant-numeric: tabular-nums; }
+  .legend i { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+  .legend .v { margin-left: auto; color: var(--muted); }
+  .bars { display: grid; gap: 14px; }
+  .bar-row .lbl { display: flex; justify-content: space-between; font-size: .92rem; margin-bottom: 4px; font-variant-numeric: tabular-nums; }
+  .bar-row .lbl span:last-child { color: var(--muted); }
+  .track { height: 22px; background: color-mix(in srgb, var(--line) 60%, transparent); border-radius: 6px; overflow: hidden; }
+  .fill { height: 100%; width: 0; border-radius: 6px; transition: width .7s cubic-bezier(.2,.8,.2,1); }
+  .sergio-card { margin-top: 16px; }
+  .sergio-card h3 { display: flex; align-items: center; gap: 8px; }
+  .evo { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .evo div { border: 1px solid var(--line); border-radius: 12px; padding: 12px; transition: opacity .3s, border-color .3s; }
+  .evo div.off { opacity: .35; }
+  .evo div.on { border-color: var(--sergio); }
+  .evo small { display: block; color: var(--muted); font-size: .78rem; }
+  .evo b { display: block; font-variant-numeric: tabular-nums; font-size: 1.1rem; }
+  .evo span { font-size: .85rem; font-variant-numeric: tabular-nums; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: .9rem; }
+  th, td { padding: 8px 6px; border-bottom: 1px solid var(--line); text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  thead th { color: var(--muted); font-weight: 600; font-size: .8rem; }
+  .tbl { margin-top: 16px; overflow-x: auto; }
+  .note { margin-top: 20px; color: var(--muted); font-size: .82rem; }
+  .note ul { margin: 6px 0 0; padding-left: 18px; }
+  @media (max-width: 760px) {
+    .grid { grid-template-columns: 1fr; }
+    .kpis { grid-template-columns: 1fr; }
+    .steps { grid-template-columns: 1fr; }
+    .evo { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Ecobaterías · Rondas de inversión</h1>
+    <p>Cómo cada ronda diluye el porcentaje de los socios, pero aumenta el valor de su participación.</p>
+  </header>
+
+  <div class="steps" role="group" aria-label="Etapas">
+    <button class="step" data-i="0"><small>Etapa 1</small><b>Ingresa Sergio G. · 5%</b></button>
+    <button class="step" data-i="1"><small>Etapa 2</small><b>Ingresa Revtech · 10%</b></button>
+    <button class="step" data-i="2"><small>Etapa 3</small><b>Nuevo inversionista · 20%</b></button>
+  </div>
+
+  <div class="nav">
+    <button id="prev">← Anterior</button>
+    <button id="next">Siguiente →</button>
+  </div>
+
+  <div class="card narr">
+    <h2 id="nTitle"></h2>
+    <p id="nText"></p>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><span>Valorización total de la sociedad</span><strong id="kVal"></strong><em id="kValD"></em></div>
+    <div class="kpi"><span>Aporte de la ronda</span><strong id="kInv"></strong><em id="kInvD"></em></div>
+    <div class="kpi"><span>Valor de la participación de Sergio G.</span><strong id="kSer"></strong><em id="kSerD"></em></div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h3>Participación (%)</h3>
+      <div class="donut-wrap"><svg id="donut" viewBox="0 0 220 220" width="220" height="220" role="img" aria-label="Distribución de la propiedad"></svg></div>
+      <ul class="legend" id="legend"></ul>
+    </div>
+    <div class="card">
+      <h3>Valor de cada participación (CLP)</h3>
+      <div class="bars" id="bars"></div>
+    </div>
+  </div>
+
+  <div class="card sergio-card">
+    <h3><i style="width:12px;height:12px;border-radius:3px;background:var(--sergio);display:inline-block"></i>Evolución de Sergio G.</h3>
+    <div class="evo" id="evo"></div>
+  </div>
+
+  <div class="card tbl">
+    <h3>Tabla de capitalización</h3>
+    <table>
+      <thead><tr><th>Socio</th><th>Etapa 1</th><th>Etapa 2</th><th>Etapa 3</th><th>Valor en etapa 3</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="note">
+    <b>Supuestos del modelo</b>
+    <ul>
+      <li>Cada ingreso se modela como emisión de acciones nuevas: todos los socios existentes se diluyen en la misma proporción.</li>
+      <li>Valorización post-money = aporte ÷ porcentaje adquirido.</li>
+      <li>"Fundadores" agrupa a todos los socios previos a Sergio G.</li>
+      <li>Simulación ilustrativa; no constituye oferta ni asesoría financiera ni legal.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+(function () {
+  const HOLDERS = [
+    { id: "fund",    name: "Fundadores", color: "var(--fund)" },
+    { id: "sergio",  name: "Sergio G.",  color: "var(--sergio)" },
+    { id: "revtech", name: "Revtech",    color: "var(--revtech)" },
+    { id: "inv3",    name: "Inversionista 3", color: "var(--inv3)" }
+  ];
+
+  // Rondas: quién entra, cuánto aporta y qué % recibe (post-money)
+  const ROUNDS = [
+    { who: "sergio",  amount: 60e6,  pct: 0.05 },
+    { who: "revtech", amount: 300e6, pct: 0.10 },
+    { who: "inv3",    amount: 1e9,   pct: 0.20 }
+  ];
+
+  // Construye las etapas aplicando dilución proporcional
+  const STAGES = [];
+  let own = { fund: 1 };
+  ROUNDS.forEach(r => {
+    const next = {};
+    Object.keys(own).forEach(k => next[k] = own[k] * (1 - r.pct));
+    next[r.who] = r.pct;
+    own = next;
+    STAGES.push({ round: r, own: { ...own }, val: r.amount / r.pct });
+  });
+
+  const TEXT = [
+    { t: "Etapa 1 · Sergio G. ingresa con el 5%",
+      d: "Sergio G. aporta $60.000.000 por el 5% de la sociedad, lo que implica una valorización post-money de $1.200.000.000. Los fundadores quedan con el 95%." },
+    { t: "Etapa 2 · Revtech ingresa con $300.000.000 por el 10%",
+      d: "La valorización sube a $3.000.000.000. Todos los socios se diluyen un 10% relativo (Sergio pasa de 5% a 4,5%), pero el valor de su participación sube de $60 MM a $135 MM." },
+    { t: "Etapa 3 · Nuevo inversionista con $1.000.000.000 por el 20%",
+      d: "La valorización total sube a $5.000.000.000. Todos se diluyen un 20% relativo (Sergio llega a 3,6%), pero su participación ahora vale $180 MM: 3 veces lo que aportó." }
+  ];
+
+  const clp = n => "$" + Math.round(n).toLocaleString("es-CL");
+  const mm = n => "$" + (n / 1e6).toLocaleString("es-CL", { maximumFractionDigits: 0 }) + " MM";
+  const pct = n => (n * 100).toLocaleString("es-CL", { maximumFractionDigits: 2 }) + "%";
+
+  let cur = 0;
+  const $ = id => document.getElementById(id);
+  const stepBtns = [...document.querySelectorAll(".step")];
+
+  // Donut
+  const NS = "http://www.w3.org/2000/svg";
+  const donut = $("donut");
+  const R = 80, C = 2 * Math.PI * R;
+  const bg = document.createElementNS(NS, "circle");
+  bg.setAttribute("cx", 110); bg.setAttribute("cy", 110); bg.setAttribute("r", R);
+  bg.setAttribute("fill", "none"); bg.setAttribute("stroke", "var(--line)"); bg.setAttribute("stroke-width", 34);
+  donut.appendChild(bg);
+  const arcs = {};
+  HOLDERS.forEach(h => {
+    const c = document.createElementNS(NS, "circle");
+    c.setAttribute("cx", 110); c.setAttribute("cy", 110); c.setAttribute("r", R);
+    c.setAttribute("fill", "none"); c.setAttribute("stroke", h.color); c.setAttribute("stroke-width", 34);
+    c.setAttribute("transform", "rotate(-90 110 110)");
+    c.style.transition = "stroke-dasharray .7s cubic-bezier(.2,.8,.2,1), stroke-dashoffset .7s cubic-bezier(.2,.8,.2,1)";
+    c.setAttribute("stroke-dasharray", "0 " + C);
+    const tt = document.createElementNS(NS, "title");
+    c.appendChild(tt);
+    donut.appendChild(c);
+    arcs[h.id] = { c, tt };
+  });
+  const cTxt = document.createElementNS(NS, "text");
+  cTxt.setAttribute("x", 110); cTxt.setAttribute("y", 106); cTxt.setAttribute("text-anchor", "middle");
+  cTxt.setAttribute("font-size", 13); cTxt.setAttribute("opacity", .7);
+  cTxt.textContent = "Valorización";
+  const cVal = document.createElementNS(NS, "text");
+  cVal.setAttribute("x", 110); cVal.setAttribute("y", 128); cVal.setAttribute("text-anchor", "middle");
+  cVal.setAttribute("font-size", 18); cVal.setAttribute("font-weight", 700);
+  donut.append(cTxt, cVal);
+
+  // Barras
+  const bars = $("bars");
+  const barEls = {};
+  HOLDERS.forEach(h => {
+    const row = document.createElement("div");
+    row.className = "bar-row";
+    row.innerHTML = `<div class="lbl"><span>${h.name}</span><span></span></div><div class="track"><div class="fill" style="background:${h.color}"></div></div>`;
+    bars.appendChild(row);
+    barEls[h.id] = { row, val: row.querySelector(".lbl span:last-child"), fill: row.querySelector(".fill") };
+  });
+  const MAXV = Math.max(...STAGES.map(s => Math.max(...Object.values(s.own)) * s.val));
+
+  // Evolución Sergio
+  const evo = $("evo");
+  STAGES.forEach((s, i) => {
+    const d = document.createElement("div");
+    const v = s.own.sergio * s.val;
+    const mult = v / ROUNDS[0].amount;
+    d.innerHTML = `<small>Etapa ${i + 1}</small><b>${mm(v)}</b><span>${pct(s.own.sergio)} · ${mult.toLocaleString("es-CL", { maximumFractionDigits: 2 })}x su aporte</span>`;
+    evo.appendChild(d);
+  });
+
+  // Tabla
+  $("tbody").innerHTML = HOLDERS.map(h => {
+    const cells = STAGES.map(s => `<td>${s.own[h.id] ? pct(s.own[h.id]) : "—"}</td>`).join("");
+    const last = STAGES[2];
+    return `<tr><td>${h.name}</td>${cells}<td>${clp(last.own[h.id] * last.val)}</td></tr>`;
+  }).join("") + `<tr><td><b>Valorización</b></td>${STAGES.map(s => `<td><b>${mm(s.val)}</b></td>`).join("")}<td></td></tr>`;
+
+  function render(i) {
+    cur = i;
+    const s = STAGES[i], prev = STAGES[i - 1];
+    stepBtns.forEach((b, j) => b.setAttribute("aria-pressed", j === i));
+    $("prev").disabled = i === 0;
+    $("next").disabled = i === STAGES.length - 1;
+    $("nTitle").textContent = TEXT[i].t;
+    $("nText").textContent = TEXT[i].d;
+
+    $("kVal").textContent = clp(s.val);
+    $("kValD").textContent = prev ? "+" + mm(s.val - prev.val) + " vs etapa anterior" : "post-money";
+    $("kInv").textContent = clp(s.round.amount);
+    $("kInvD").textContent = "por el " + pct(s.round.pct);
+    const sv = s.own.sergio * s.val;
+    $("kSer").textContent = clp(sv);
+    $("kSerD").textContent = prev
+      ? `${pct(s.own.sergio)} (antes ${pct(prev.own.sergio)}) · +${mm(sv - prev.own.sergio * prev.val)}`
+      : `${pct(s.own.sergio)} · aporte ${mm(ROUNDS[0].amount)}`;
+
+    let off = 0;
+    const legend = $("legend");
+    legend.innerHTML = "";
+    HOLDERS.forEach(h => {
+      const p = s.own[h.id] || 0;
+      const a = arcs[h.id];
+      a.c.setAttribute("stroke-dasharray", `${p * C} ${C}`);
+      a.c.setAttribute("stroke-dashoffset", -off * C);
+      a.tt.textContent = `${h.name}: ${pct(p)}`;
+      off += p;
+      if (p) {
+        const li = document.createElement("li");
+        const was = prev && prev.own[h.id] ? ` <small>(antes ${pct(prev.own[h.id])})</small>` : (prev ? " <small>(nuevo)</small>" : "");
+        li.innerHTML = `<i style="background:${h.color}"></i>${h.name}${was}<span class="v">${pct(p)}</span>`;
+        legend.appendChild(li);
+      }
+      const v = p * s.val;
+      const b = barEls[h.id];
+      b.row.style.opacity = p ? 1 : .35;
+      b.fill.style.width = (v / MAXV * 100) + "%";
+      b.val.textContent = p ? clp(v) : "—";
+    });
+    cVal.textContent = mm(s.val);
+
+    [...evo.children].forEach((d, j) => d.className = j === i ? "on" : (j < i ? "" : "off"));
+  }
+
+  stepBtns.forEach(b => b.addEventListener("click", () => render(+b.dataset.i)));
+  $("prev").addEventListener("click", () => cur > 0 && render(cur - 1));
+  $("next").addEventListener("click", () => cur < STAGES.length - 1 && render(cur + 1));
+  document.addEventListener("keydown", e => {
+    if (e.key === "ArrowRight" && cur < STAGES.length - 1) render(cur + 1);
+    if (e.key === "ArrowLeft" && cur > 0) render(cur - 1);
+  });
+  requestAnimationFrame(() => render(0));
+})();
+</script>
+</body>
+</html>
