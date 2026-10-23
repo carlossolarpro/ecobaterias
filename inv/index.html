@@ -9,13 +9,13 @@
 <style>
   :root {
     --bg: #f6f7f5; --card: #ffffff; --ink: #1b1f1d; --muted: #5d6662; --line: #e2e6e3;
-    --fund: #2f6f4f; --sergio: #e08a1e; --revtech: #3f6fb5; --inv3: #8a5cc2;
+    --eco: #2f6f4f; --solar: #1f8f99; --sergio: #e08a1e; --revtech: #3f6fb5; --inv3: #8a5cc2;
     --accent: #2f6f4f; --up: #1f8a4c;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       --bg: #121513; --card: #1b1f1d; --ink: #eef1ef; --muted: #9aa49f; --line: #2c322f;
-      --fund: #4fa077; --sergio: #f0a243; --revtech: #6b95d6; --inv3: #a983dc;
+      --eco: #4fa077; --solar: #3fb6c0; --sergio: #f0a243; --revtech: #6b95d6; --inv3: #a983dc;
       --accent: #4fa077; --up: #45c07a;
     }
   }
@@ -78,6 +78,8 @@
     .kpis { grid-template-columns: 1fr; }
     .steps { grid-template-columns: 1fr; }
     .evo { grid-template-columns: 1fr; }
+    table { font-size: .8rem; }
+    th, td { padding: 8px 3px; }
   }
 </style>
 </head>
@@ -140,7 +142,7 @@
     <ul>
       <li>Cada ingreso se modela como emisión de acciones nuevas: todos los socios existentes se diluyen en la misma proporción.</li>
       <li>Valorización post-money = aporte ÷ porcentaje adquirido.</li>
-      <li>"Fundadores" agrupa a todos los socios previos a Sergio G.</li>
+      <li>Antes del ingreso de Sergio G., Ecominería SpA. y SolarPro SpA. poseen 50% cada uno.</li>
       <li>Simulación ilustrativa; no constituye oferta ni asesoría financiera ni legal.</li>
     </ul>
   </div>
@@ -149,7 +151,8 @@
 <script>
 (function () {
   const HOLDERS = [
-    { id: "fund",    name: "Fundadores", color: "var(--fund)" },
+    { id: "eco",     name: "Ecominería SpA.", color: "var(--eco)" },
+    { id: "solar",   name: "SolarPro SpA.",   color: "var(--solar)" },
     { id: "sergio",  name: "Sergio G.",  color: "var(--sergio)" },
     { id: "revtech", name: "Revtech",    color: "var(--revtech)" },
     { id: "inv3",    name: "Inversionista 3", color: "var(--inv3)" }
@@ -164,7 +167,7 @@
 
   // Construye las etapas aplicando dilución proporcional
   const STAGES = [];
-  let own = { fund: 1 };
+  let own = { eco: 0.5, solar: 0.5 };
   ROUNDS.forEach(r => {
     const next = {};
     Object.keys(own).forEach(k => next[k] = own[k] * (1 - r.pct));
@@ -175,11 +178,11 @@
 
   const TEXT = [
     { t: "Etapa 1 · Sergio G. ingresa con el 5%",
-      d: "Sergio G. aporta $60.000.000 por el 5% de la sociedad, lo que implica una valorización post-money de $1.200.000.000. Los fundadores quedan con el 95%." },
+      d: "Sergio G. aporta $60.000.000 por el 5% de la sociedad, lo que implica una valorización post-money de $1.200.000.000. Los fundadores, Ecominería SpA. y SolarPro SpA., quedan con 47,5% cada uno." },
     { t: "Etapa 2 · Revtech ingresa con $300.000.000 por el 10%",
-      d: "La valorización sube a $3.000.000.000. Todos los socios se diluyen un 10% relativo (Sergio pasa de 5% a 4,5%), pero el valor de su participación sube de $60 MM a $135 MM." },
+      d: "La valorización sube a $3.000.000.000. Todos los socios se diluyen un 10% relativo (cada fundador pasa de 47,5% a 42,75% y Sergio de 5% a 4,5%), pero el valor de su participación sube de $60 MM a $135 MM." },
     { t: "Etapa 3 · Nuevo inversionista con $1.000.000.000 por el 20%",
-      d: "La valorización total sube a $5.000.000.000. Todos se diluyen un 20% relativo (Sergio llega a 3,6%), pero su participación ahora vale $180 MM: 3 veces lo que aportó." }
+      d: "La valorización total sube a $5.000.000.000. Todos se diluyen un 20% relativo (cada fundador llega a 34,2% y Sergio a 3,6%), pero su participación ahora vale $180 MM: 3 veces lo que aportó." }
   ];
 
   const clp = n => "$" + Math.round(n).toLocaleString("es-CL");
@@ -246,7 +249,7 @@
   $("tbody").innerHTML = HOLDERS.map(h => {
     const cells = STAGES.map(s => `<td>${s.own[h.id] ? pct(s.own[h.id]) : "—"}</td>`).join("");
     const last = STAGES[2];
-    return `<tr><td>${h.name}</td>${cells}<td>${clp(last.own[h.id] * last.val)}</td></tr>`;
+    return `<tr><td>${h.name}</td>${cells}<td>${mm(last.own[h.id] * last.val)}</td></tr>`;
   }).join("") + `<tr><td><b>Valorización</b></td>${STAGES.map(s => `<td><b>${mm(s.val)}</b></td>`).join("")}<td></td></tr>`;
 
   function render(i) {
